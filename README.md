@@ -1,7 +1,7 @@
 # kd-fuel
 np style fuel system 
 
-fuel code form ps-fuel : https://github.com/Project-Sloth/ps-fuel
+fuel forked form ps-fuel : https://github.com/Project-Sloth/ps-fuel
 
 ![image](https://user-images.githubusercontent.com/89742984/183307493-2a535779-a750-4562-b4d1-d9c2cc7fd5e8.png)
 
