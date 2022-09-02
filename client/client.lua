@@ -18,12 +18,6 @@ local props = {
 }
 local CurrentWeaponData = {}
 
-RegisterCommand('animtest', function ()
-	RequestAnimDict("friends@")
-	while not HasAnimDictLoaded('friends@') do Wait(100) end
-	TaskPlayAnim(PlayerPedId(), "friends@", "pickupwait", 8.0, 1.0, -1, 1, 0, 0, 0, 0 )
-end)
-
 -- Functions
 
 local function ManageFuelUsage(vehicle)
