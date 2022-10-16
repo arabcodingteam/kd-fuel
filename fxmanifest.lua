@@ -3,7 +3,7 @@ game 'gta5'
 
 description 'qb-fuel'
 version '2.0'
-author 'github.com/Project-Sloth and github.com/arabcodingteam'
+author 'github.com/Project-Sloth and github.com/krrm1'
 
 client_scripts {
     '@PolyZone/client.lua',
