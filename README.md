@@ -1,4 +1,4 @@
-# kd-fuel
+# qb-fuel
 np style fuel system 
 
 fuel forked form ps-fuel : https://github.com/Project-Sloth/ps-fuel
