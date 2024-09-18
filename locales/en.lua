@@ -7,7 +7,7 @@ local Translations = {
         ["vehicle_full"] = "This vehicle is already full",
         ["already_full"] = "Gas Can is already full",
         ["no_nozzle"] = "You Don't Have Nozzle To Refuel The Vehicle",
-        ["broke_nozle"] = "You Lost $100 For Losing The Nozzle",
+        ["broke_nozle"] = "You Lost The Nozzle",
         ["cant_havenozzle"] = "You Have Nozzle",
         ["cant_dontnozzle"] = "You Don't Have Nozzle",
 

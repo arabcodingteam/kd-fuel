@@ -6,7 +6,6 @@ local inBlacklisted = false
 local inGasStation = false
 local haveNozzle = false
 local isNearPump = false
-local NozzlePrice = Config.nozzleprice
 local props = {
 	'prop_gas_pump_1d',
 	'prop_gas_pump_1a',
@@ -45,13 +44,11 @@ CreateThread(function()
 
 		if pumpDistance < 2.5 then
 			isNearPump = pumpObject
-			-- currentCash = QBCore.Functions.GetPlayerData().money['cash']
 			Wait(500)
 		else
 			isNearPump = false
 			if haveNozzle == true then
 				QBCore.Functions.Notify(Lang:t("notify.broke_nozle"), "error")
-				TriggerServerEvent('qb-fuel:server:PayForFuel', NozzlePrice)
 				DeleteEntity(Nozzle)
 				DeleteObject(Nozzle)
 				haveNozzle = false
@@ -76,7 +73,7 @@ CreateThread(function()
 		options = {
 		{
 			type = "client",
-			event = "qb-fuel:client:SendMenuToServer",
+			event = "qb-fuel:PayMenu",
 			icon = "fas fa-gas-pump",
 			label = "Refuel Vehicle",
 			canInteract = function()
@@ -176,31 +173,18 @@ end)
 
 -- Client Events
 
-RegisterNetEvent('qb-fuel:client:SendMenuToServer', function()
-	local vehicle = QBCore.Functions.GetClosestVehicle()
-	local CurFuel = GetVehicleFuelLevel(vehicle)
-	local refillCost = Round(Config.RefillCost - CurFuel) * Config.CostMultiplier
-	local ped = PlayerPedId()
-		if haveNozzle == true then
-		    if CurFuel < 95 then
-		     	TriggerServerEvent('qb-fuel:server:OpenMenu', refillCost, inGasStation, false)
-	     	else
-			   QBCore.Functions.Notify(Lang:t("notify.vehicle_full"), "error")
-		    end
-		else
-			QBCore.Functions.Notify(Lang:t("notify.no_nozzle"), "error")
-		end
-end)
-
-RegisterNetEvent('qb-fuel:client:RefuelVehicle', function(refillCost)
+RegisterNetEvent('qb-fuel:client:RefuelVehicle', function(data)
 	local ped = PlayerPedId()
 	local vehicle = QBCore.Functions.GetClosestVehicle()
 	local ped = PlayerPedId()
 	local CurFuel = GetFuel(vehicle)
 	local time = (100 - CurFuel) * 400
 	local vehicleCoords = GetEntityCoords(vehicle)
-			if isCloseVeh() then
-				if QBCore.Functions.GetPlayerData().money['cash'] <= refillCost then 
+	local refillCost = Round(Config.RefillCost - CurFuel) * Config.CostMultiplier
+
+		if isCloseVeh() then
+			if CurFuel < 95 then
+				if QBCore.Functions.GetPlayerData().money[data.MoneyType] <= refillCost then 
 					QBCore.Functions.Notify(Lang:t("notify.no_money"), "error")
 				else
 				RequestAnimDict("friends@")
@@ -220,7 +204,7 @@ RegisterNetEvent('qb-fuel:client:RefuelVehicle', function(refillCost)
 					disableMouse = false,
 					disableCombat = true,
 				}, {}, {}, {}, function() -- Done
-					TriggerServerEvent('qb-fuel:server:PayForFuel', refillCost, GetPlayerServerId(PlayerId()))
+					TriggerServerEvent('qb-fuel:server:PayForFuel', data, refillCost, GetPlayerServerId(PlayerId()))
 					SetFuel(vehicle, 100)
 					PlaySound(-1, "5_SEC_WARNING", "HUD_MINI_GAME_SOUNDSET", 0, 0, 1)
 					StopAnimTask(ped, "weapon@w_sp_jerrycan", "fire", 3.0, 3.0, -1, 2, 0, 0, 0, 0)
@@ -231,7 +215,10 @@ RegisterNetEvent('qb-fuel:client:RefuelVehicle', function(refillCost)
 					StopAnimTask(ped, "weapon@w_sp_jerrycan", "fire", 3.0, 3.0, -1, 2, 0, 0, 0, 0)
 					end)
 				end
+			else
+				QBCore.Functions.Notify(Lang:t("notify.vehicle_full"), "error")
 			end
+		end
 end)
 
 -- fuel Nozzle
@@ -244,11 +231,11 @@ RegisterNetEvent('qb-fuel:createNozzle', function (model)
     local bone = GetPedBoneIndex(ped, boneId)
 
 	if haveNozzle == false then
-    QBCore.Functions.LoadModel(modelHash)
-    Nozzle = CreateObject(modelHash, -50.0, -50.0, 5.0, 4, 10)
-    AttachEntityToEntity(Nozzle, ped, bone, 0.04, 0.0, -0.03, 10.0, -60.0, -100.0, false, false, false, false, 2, true)
-    SetModelAsNoLongerNeeded(modelHash)
-	haveNozzle = true
+		QBCore.Functions.LoadModel(modelHash)
+		Nozzle = CreateObject(modelHash, -50.0, -50.0, 5.0, 4, 10)
+		AttachEntityToEntity(Nozzle, ped, bone, 0.04, 0.0, -0.03, 10.0, -60.0, -100.0, false, false, false, false, 2, true)
+		SetModelAsNoLongerNeeded(modelHash)
+		haveNozzle = true
 	else
 		QBCore.Functions.Notify(Lang:t("notify.cant_havenozzle"), "error")
 	end
@@ -256,52 +243,96 @@ end)
 
 RegisterNetEvent('qb-fuel:deleteNozzle', function ()
 	if haveNozzle == true then
-    DeleteEntity(Nozzle)
-	DeleteObject(Nozzle)
-	haveNozzle = false
+		DeleteEntity(Nozzle)
+		DeleteObject(Nozzle)
+		haveNozzle = false
 	else
 		QBCore.Functions.Notify(Lang:t("notify.cant_dontnozzle"), "error")
 	end
 end)
 
 RegisterNetEvent('qb-fuel:pumpmenu', function ()
-        local myMenu = {
-                {
-                    header = "Fuel Pump",
-                    icon = 'fas fa-gas-pump',
-                    txt = "",
-                    isMenuHeader = true
-                },
-                {
-                    id = 1,
-                    header = "Take Nozzle",
-                    icon = 'fas fa-hand',
-                    txt = "",
-                    params = {
-                        event = "qb-fuel:createNozzle",
-                    }
-                },
-				{
-                    id = 1,
-                    header = "Put Nozzle",
-                    icon = 'fas fa-hand-back-fist',
-                    txt = "",
-                    params = {
-                        event = "qb-fuel:deleteNozzle",
-                    }
-                },
-                {
-                    id = 7,
-                    header = 'close',
-                    icon = 'fas fa-x',
-                    params = {
-                        event = 'qb-menu:client:closeMenu',
-                    }
-                },
-            }
-            exports['qb-menu']:openMenu(myMenu)
-
+	local myMenu = {
+			{
+				header = "Gas Station Pump",
+				icon = 'fas fa-gas-pump',
+				txt = "",
+				isMenuHeader = true
+			},
+			{
+				id = 1,
+				header = "Take The Nozzle",
+				icon = 'fas fa-hand',
+				txt = "",
+				params = {
+					event = "qb-fuel:createNozzle",
+				}
+			},
+			{
+				id = 1,
+				header = "Put Nozzle",
+				icon = 'fas fa-hand-back-fist',
+				txt = "",
+				params = {
+					event = "qb-fuel:deleteNozzle",
+				}
+			},
+			{
+				id = 7,
+				header = 'close',
+				icon = 'fas fa-x',
+				params = {
+					event = 'qb-menu:client:closeMenu',
+				}
+			},
+		}
+	exports['qb-menu']:openMenu(myMenu)
 end)
+
+RegisterNetEvent('qb-fuel:PayMenu', function ()
+	local myMenu = {
+			{
+				header = "Gas Station Pay",
+				icon = 'fas fa-dollar-sign',
+				txt = "",
+				isMenuHeader = true
+			},
+			{
+				id = 1,
+				header = "Pay With Card",
+				icon = 'fas fa-credit-card',
+				txt = "",
+				params = {
+					event = "qb-fuel:client:RefuelVehicle",
+					args = {
+						MoneyType = 'bank'
+					}
+				}
+			},
+			{
+				id = 2,
+				header = "Pay With Cash",
+				icon = 'fas fa-wallet',
+				txt = "",
+				params = {
+					event = "qb-fuel:client:RefuelVehicle",
+					args = {
+						MoneyType = 'cash'
+					}
+				}
+			},
+			{
+				id = 7,
+				header = 'close',
+				icon = 'fas fa-x',
+				params = {
+					event = 'qb-menu:client:closeMenu',
+				}
+			},
+		}
+	exports['qb-menu']:openMenu(myMenu)
+end)
+
 
 -- Target Export
 

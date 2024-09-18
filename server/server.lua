@@ -2,33 +2,7 @@
 
 local QBCore = exports['qb-core']:GetCoreObject()
 
--- Functions
-
-local function GlobalTax(value)
-	local tax = (value / 100 * Config.GlobalTax)
-	return tax
-end
-
 -- Server Events
-
-RegisterNetEvent("qb-fuel:server:OpenMenu", function (amount, inGasStation, hasWeapon)
-	local src = source
-	if not src then return end
-	local player = QBCore.Functions.GetPlayer(src)
-	if not player then return end
-	local tax = GlobalTax(amount)
-	local total = math.ceil(amount + tax)
-		TriggerClientEvent('qb-menu:client:openMenu', src, {
-			{
-				header = 'Gas Station',
-				txt = 'The total cost is going to be: $'..total..' including taxes.' ,
-				params = {
-					event = "qb-fuel:client:RefuelVehicle",
-					args = total,
-				}
-			},
-		})
-end)
 
 QBCore.Functions.CreateCallback('qb-fuel:server:fuelCan', function(source, cb)
 	local src = source
@@ -37,10 +11,13 @@ QBCore.Functions.CreateCallback('qb-fuel:server:fuelCan', function(source, cb)
     cb(itemData)
 end)
 
-RegisterNetEvent("qb-fuel:server:PayForFuel", function (amount)
+RegisterNetEvent("qb-fuel:server:PayForFuel", function(data, refillCost)
 	local src = source
+	local PayTable = json.encode(data)
+	local PayData = json.decode(PayTable)
+	
 	if not src then return end
 	local player = QBCore.Functions.GetPlayer(src)
 	if not player then return end
-	player.Functions.RemoveMoney('cash', amount)
+	player.Functions.RemoveMoney(PayData.MoneyType, refillCost)
 end)
