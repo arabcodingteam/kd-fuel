@@ -336,15 +336,17 @@ end)
 
 -- Target Export
 
-exports['qb-target']:AddTargetModel(props, {
-	options = {
-		{
-			type = "client",
-			event = "qb-fuel:pumpmenu",
-			icon = "fas fa-burn",
-			label = "Use Pump",
-			
+CreateThread(function()
+	exports['qb-target']:AddTargetModel(props, {
+		options = {
+			{
+				type = "client",
+				event = "qb-fuel:pumpmenu",
+				icon = "fas fa-burn",
+				label = "Use Pump",
+				
+			},
 		},
-	},
-	distance = 2.0
-})
+		distance = 2.0
+	})
+end)
